@@ -1,61 +1,74 @@
 import React, { useState } from 'react';
 import { useTracker } from 'meteor/react-meteor-data';
 import { Tasks } from '/imports/api/tasks.js';
+import { Task } from './Task.jsx';
+import { AccountsUIWrapper } from './AccountsUIWrapper.jsx';
 
 export const App = () => {
-  const [newTask, setNewTask] = useState('');
-  
-  const tasks = useTracker(() => Tasks.find({}, { sort: { createdAt: -1 } }).fetch());
+  const [hideCompleted, setHideCompleted] = useState(false);
+  const [newTask, setNewTask] = useState("");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!newTask) return;
+  const user = useTracker(() => Meteor.user());
 
-    Tasks.insert({
-      text: newTask.trim(),
-      createdAt: new Date(),
-    });
+  const tasksSubscription = useTracker(() => {
+    return Meteor.subscribe('tasks');
+  });
 
-    setNewTask('');
+  const tasks = useTracker(() => {
+    if (hideCompleted) {
+      return Tasks.find({ checked: { $ne: true } }, { sort: { createdAt: -1 } }).fetch();
+    }
+    return Tasks.find({}, { sort: { createdAt: -1 } }).fetch();
+  });
+
+  const incompleteCount = useTracker(() => 
+    Tasks.find({ checked: { $ne: true } }).count()
+  );
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    Meteor.call('tasks.insert', newTask.trim());
+
+    setNewTask("");
   };
 
-  const toggleChecked = ({ _id, isChecked }) => {
-    Tasks.update(_id, {
-      $set: {
-        isChecked: !isChecked,
-      },
-    });
+  const toggleHideCompleted = () => {
+    setHideCompleted(!hideCompleted);
   };
-
-  const deleteTask = ({ _id }) => Tasks.remove(_id);
 
   return (
-    <div>
-      <h1>Todo List</h1>
+    <div className="container">
+      <header>
+        <h1>Todo List ({incompleteCount})</h1>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Type to add new tasks"
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-        />
-        <button type="submit">Add Task</button>
-      </form>
+        <label className="hide-completed">
+          <input
+            type="checkbox"
+            readOnly
+            checked={hideCompleted}
+            onClick={toggleHideCompleted}
+          />
+          Hide Completed Tasks
+        </label>
+
+        <AccountsUIWrapper />
+
+        { user ? (
+          <form className="new-task" onSubmit={handleSubmit} >
+            <input
+              type="text"
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              placeholder="Type to add new tasks"
+            />
+          </form>
+        ) : ''}
+      </header>
 
       <ul>
         {tasks.map(task => (
-          <li key={task._id}>
-            <input
-              type="checkbox"
-              checked={!!task.isChecked}
-              onClick={() => toggleChecked(task)}
-              readOnly
-            />
-            <span>{task.text}</span>
-            <button onClick={() => deleteTask(task)}>Delete</button>
-          </li>
+          <Task key={task._id} task={task} />
         ))}
       </ul>
     </div>
