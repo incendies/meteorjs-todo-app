@@ -1,13 +1,6 @@
 import { Meteor } from 'meteor/meteor';
-import { Accounts } from 'meteor/accounts-base';
+import '/imports/api/tasks.js';
 
 Meteor.startup(() => {
-  if (!Accounts.findUserByUsername('testuser')) {
-    Accounts.createUser({
-      username: 'testuser',
-      password: 'testpassword'
-    });
-  }
+  // Any server startup code can go here
 });
-
-
