@@ -61,4 +61,4 @@ If you want to contact me, you can reach me.
 
 ## License
 
-This project uses the following license: [MIT License](<link_to_license>).
+This project uses the following license: [MIT License](<https://github.com/incendies/meteorjs-todo-app/blob/main/LICENSE.md>).
