@@ -20,5 +20,6 @@
       "server": "server/main.js"
     },
     "testModule": "tests/main.js"
-  }
+  },
+  "license": "MIT"
 }
